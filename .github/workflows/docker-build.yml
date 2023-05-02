@@ -1,0 +1,77 @@
+name: Create and publish a Docker image
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: buildtools
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+    steps:
+      # https://github.com/marketplace/actions/checkout
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # https://github.com/marketplace/actions/docker-login
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # https://github.com/marketplace/actions/docker-metadata-action
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4.3.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.actor }}/${{ env.IMAGE_NAME }}
+          # expressions: https://docs.github.com/en/actions/learn-github-actions/expressions
+          tags: |
+            # major.minor and major
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            
+            # latest and beta tags used on release only
+            type=raw,value=latest,priority=750,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'rc') && !contains(github.ref, 'beta') }}
+            type=raw,value=beta,priority=740,enable=${{ startsWith(github.ref, 'refs/tags/')}}
+            
+            # Unimportant tags typically used for developing
+            type=edge,branch=main,enable=${{ matrix.data.latest }}
+            type=raw,value=dev,enable=${{ matrix.data.latest && github.ref == 'refs/heads/dev' }}
+            type=sha,format=short,enable=${{ matrix.data.latest }}
+
+          # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+          labels: |
+            maintainer=retrodaredevil
+            org.opencontainers.image.title=BuildTools
+            org.opencontainers.image.description=Spigot BuildTools in a docker container
+            org.opencontainers.image.source=https://github.com/retrodaredevil/docker-buildtools
+            org.opencontainers.image.ref.name=buildtools
+            org.opencontainers.image.vendor=retrodaredevil
+            org.opencontainers.image.url=https://github.com/retrodaredevil/docker-buildtools
+            org.opencontainers.image.authors=retrodaredevil
+      # https://github.com/marketplace/actions/docker-setup-buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      # https://github.com/marketplace/actions/build-and-push-docker-images
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4.0.0
+        with:
+          context: .
+          push: true
+          platforms: ${{ env.platforms }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

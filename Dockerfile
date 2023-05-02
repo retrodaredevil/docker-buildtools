@@ -1,4 +1,4 @@
-FROM eclipse-temurin:20-jre-jammy
+FROM eclipse-temurin:19-jre-jammy
 
 RUN apt-get update &&  \
     apt-get install -y git && \
