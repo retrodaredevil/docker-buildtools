@@ -11,6 +11,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: buildtools
+  ALL_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+  SIMPLE_PLATFORMS: linux/amd64,linux/arm64/v8
 
 jobs:
   build-push:
@@ -18,8 +20,31 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+    strategy:
+      matrix:
+        data:
+          - base-image: eclipse-temurin:20-jre-jammy
+            suffix: -20
+            minimum-support: 1.19.3
+            platforms: ${{ env.SIMPLE_PLATFORMS }}
+          - base-image: eclipse-temurin:19-jre-jammy
+            suffix: -19
+            minimum-support: 1.19.2
+            latest: !!bool true
+#            platforms: ${{ env.ALL_PLATFORMS }}
+            platforms: ${{ env.SIMPLE_PLATFORMS }}
+          - base-image: eclipse-temurin:17-jre-jammy
+            suffix: -17
+            minimum-support: 1.17
+            platforms: ${{ env.SIMPLE_PLATFORMS }}
+#          - base-image: eclipse-temurin:14-jre-jammy
+#            suffix: -14
+#            minimum-support: 1.16.1
+          - base-image: eclipse-temurin:8-jre-jammy
+            suffix: -8
+            minimum-support: 1.9
+            platforms: ${{ env.SIMPLE_PLATFORMS }}
+      fail-fast: false
     steps:
       # https://github.com/marketplace/actions/checkout
       - name: Checkout repository
@@ -41,17 +66,17 @@ jobs:
           # expressions: https://docs.github.com/en/actions/learn-github-actions/expressions
           tags: |
             # major.minor and major
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{major}}.{{minor}},suffix=${{ matrix.data.suffix }}
+            type=semver,pattern={{major}},suffix=${{ matrix.data.suffix }}
             
             # latest and beta tags used on release only
-            type=raw,value=latest,priority=750,enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'rc') && !contains(github.ref, 'beta') }}
-            type=raw,value=beta,priority=740,enable=${{ startsWith(github.ref, 'refs/tags/')}}
+            type=raw,value=latest,priority=750,suffix=${{ matrix.data.suffix }},enable=${{ startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'rc') && !contains(github.ref, 'beta') }}
+            type=raw,value=beta,priority=740,suffix=${{ matrix.data.suffix }},enable=${{ startsWith(github.ref, 'refs/tags/')}}
             
             # Unimportant tags typically used for developing
-            type=edge,branch=main
-            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
-            type=sha,format=short
+            type=edge,branch=main,suffix=${{ matrix.data.suffix }}
+            type=raw,value=dev,suffix=${{ matrix.data.suffix }},enable=${{ github.ref == 'refs/heads/dev' }}
+            type=sha,format=short,suffix=${{ matrix.data.suffix }}
 
           # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
           labels: |
@@ -71,7 +96,10 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           context: .
+          build-args: |
+            BASE_IMAGE=${{ matrix.data.base-image }}
           push: true
-          platforms: ${{ env.platforms }}
+#          platforms: ${{ env.platforms }}
+          platforms: ${{ matrix.data.platforms }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
