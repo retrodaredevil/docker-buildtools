@@ -22,28 +22,28 @@ jobs:
       packages: write
     strategy:
       matrix:
+        # Note cannot use ${{ env.**** }} because https://github.com/actions/runner/issues/1189
         data:
           - base-image: eclipse-temurin:20-jre-jammy
             suffix: -20
             minimum-support: 1.19.3
-            platforms: ${{ env.SIMPLE_PLATFORMS }}
+            platforms: linux/amd64,linux/arm64/v8
           - base-image: eclipse-temurin:19-jre-jammy
             suffix: -19
             minimum-support: 1.19.2
             latest: !!bool true
-#            platforms: ${{ env.ALL_PLATFORMS }}
-            platforms: ${{ env.SIMPLE_PLATFORMS }}
+            platforms: linux/amd64,linux/arm64/v8
           - base-image: eclipse-temurin:17-jre-jammy
             suffix: -17
             minimum-support: 1.17
-            platforms: ${{ env.SIMPLE_PLATFORMS }}
+            platforms: linux/amd64,linux/arm64/v8
 #          - base-image: eclipse-temurin:14-jre-jammy
 #            suffix: -14
 #            minimum-support: 1.16.1
           - base-image: eclipse-temurin:8-jre-jammy
             suffix: -8
             minimum-support: 1.9
-            platforms: ${{ env.SIMPLE_PLATFORMS }}
+            platforms: linux/amd64,linux/arm64/v8
       fail-fast: false
     steps:
       # https://github.com/marketplace/actions/checkout
