@@ -49,9 +49,9 @@ jobs:
             type=raw,value=beta,priority=740,enable=${{ startsWith(github.ref, 'refs/tags/')}}
             
             # Unimportant tags typically used for developing
-            type=edge,branch=main,enable=${{ matrix.data.latest }}
-            type=raw,value=dev,enable=${{ matrix.data.latest && github.ref == 'refs/heads/dev' }}
-            type=sha,format=short,enable=${{ matrix.data.latest }}
+            type=edge,branch=main
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=sha,format=short
 
           # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
           labels: |
