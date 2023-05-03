@@ -7,10 +7,14 @@ RUN apt-get update &&  \
 
 RUN wget -O /BuildTools.jar "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
 
-WORKDIR "/working"
-# thanks https://stackoverflow.com/a/70345376/5434860
-ENV GIT_CONFIG_GLOBAL="/working/.gitconfig"
+RUN groupadd --gid 1000 spigot && \
+    useradd --create-home --uid 1000 --gid spigot spigot
 
-ENTRYPOINT ["java", "-jar", "/BuildTools.jar"]
-CMD ["--output-dir", "/output"]
+COPY --chmod=0500 entrypoint.sh /entrypoint.sh
+
+WORKDIR "/home/spigot/data"
+
+ENV PUID=""
+ENV PGID=1000
+ENTRYPOINT ["/entrypoint.sh", "/opt/java/openjdk/bin/java", "-jar", "/BuildTools.jar"]
 

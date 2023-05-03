@@ -11,8 +11,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: buildtools
-  ALL_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
-  SIMPLE_PLATFORMS: linux/amd64,linux/arm64/v8
+#  ALL_PLATFORMS: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+#  SIMPLE_PLATFORMS: linux/amd64,linux/arm64/v8
 
 jobs:
   build-push:
@@ -24,6 +24,7 @@ jobs:
       matrix:
         # Note cannot use ${{ env.**** }} because https://github.com/actions/runner/issues/1189
         data:
+          # https://hub.docker.com/_/eclipse-temurin
           - base-image: eclipse-temurin:20-jre-jammy
             suffix: -20
             minimum-support: 1.19.3
@@ -31,10 +32,14 @@ jobs:
           - base-image: eclipse-temurin:19-jre-jammy
             suffix: -19
             minimum-support: 1.19.2
-            latest: !!bool true
             platforms: linux/amd64,linux/arm64/v8
           - base-image: eclipse-temurin:17-jre-jammy
             suffix: -17
+            minimum-support: 1.17.1
+            platforms: linux/amd64,linux/arm64/v8
+            latest: !!bool true
+          - base-image: eclipse-temurin:16-jre-jammy
+            suffix: -16
             minimum-support: 1.17
             platforms: linux/amd64,linux/arm64/v8
 #          - base-image: eclipse-temurin:14-jre-jammy
