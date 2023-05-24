@@ -37,3 +37,10 @@ docker build --tag buildtools --build-arg BASE_IMAGE=eclipse-temurin:17-jre-jamm
 mkdir cache/ cache-m2/
 docker run -e PUID="$(id -u)" -e PGID="$(id -g)" --rm -v ./:/output -v ./cache:/home/spigot  buildtools -o /output --rev 1.19.4
 ```
+
+## Other
+
+The source for BuildTools can be found here: https://hub.spigotmc.org/stash/projects/SPIGOT/repos/buildtools/browse.
+Specifically [Builder.java](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/buildtools/browse/src/main/java/org/spigotmc/builder/Builder.java)
+has most of the logic.
+More about the source here: https://www.spigotmc.org/wiki/cloning-building-and-compiling-the-spigot-source/
